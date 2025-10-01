@@ -1,0 +1,51 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: appdb
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d appdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+
+  users-api:
+    build: ./services/users-api
+    environment:
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@db:5432/appdb
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8001:8000"
+
+  projects-api:
+    build: ./services/projects-api
+    environment:
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@db:5432/appdb
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8002:8000"
+
+  tasks-api:
+    build: ./services/tasks-api
+    environment:
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@db:5432/appdb
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8003:8000"
+
+volumes:
+  dbdata:
