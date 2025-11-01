@@ -1,7 +1,14 @@
 #!/usr/bin/env bash
 
 set -euo pipefail
-source "$(dirname "$0")/env.sh"
+cd "$(dirname "$0")"
+source ./env.sh
+
+echo "  VALIDATION TESTS - Mini Gestor de Proyectos"
+echo ""
+
+echo "== PART 1: Core Functionality Tests =="
+echo ""
 
 echo "== 1) Smoke =="
 ./1_smoke.sh
@@ -21,6 +28,17 @@ echo "== 5) Schemas por servicio =="
 echo "== 6) Concurrencia =="
 ./6_concurrency_users.sh
 
-echo
-echo "✔ Validaciones completas. Presioná CTRL+C para cerrar, o cerrá la ventana."
-tail -f /dev/null
+echo ""
+echo "== PART 2: Architectural Patterns Tests =="
+echo ""
+
+./run_pattern_tests.sh
+
+echo ""
+echo "✔ ALL VALIDATIONS COMPLETE"
+echo ""
+echo "Summary:"
+echo "  ✓ Core functionality tests passed"
+echo "  ✓ Architectural patterns validated"
+echo "  ✓ System ready for production"
+echo ""

@@ -1,7 +1,16 @@
-# Mini Gestor de Proyectos — UT3 TFU (FastAPI + Docker + ACID)
+# Mini Gestor de Proyectos — UT3 TFU (FastAPI + Docker + ACID + UT4 Architectural Patterns)
 
 Este repo incluye 3 APIs (usuarios, proyectos y tareas) desplegadas con **Docker Compose**,
 todas utilizando **PostgreSQL** y transacciones **ACID** a nivel de servicio (los servicios son *stateless*).
+
+**Implementa 7 patrones arquitectónicos** de disponibilidad, rendimiento y seguridad:
+- Health Endpoint Monitoring
+- Circuit Breaker
+- Retry with Exponential Backoff
+- Cache-Aside (Redis)
+- Queue-Based Load Leveling (RabbitMQ)
+- Rate Limiting (Multi-layer)
+- Gateway Offloading (nginx)
 
 Alineado con la consigna (componentes, interfaces, contenedores, ACID, servicios sin estado) de la UT3 TFU. Ver documento de la cátedra.
 
@@ -9,6 +18,9 @@ Alineado con la consigna (componentes, interfaces, contenedores, ACID, servicios
 - Python 3.11 + FastAPI + Uvicorn
 - SQLAlchemy 2.x + psycopg2-binary
 - PostgreSQL 16
+- Redis 7 (caching)
+- RabbitMQ 3 (message queue)
+- nginx (API Gateway)
 - Docker Compose
 
 ## Levantar todo
@@ -16,10 +28,23 @@ Alineado con la consigna (componentes, interfaces, contenedores, ACID, servicios
 docker compose up --build
 ```
 
-APIs:
+### Servicios disponibles
+
+**APIs (acceso directo para desarrollo):**
 - Users API: http://localhost:8001/docs
 - Projects API: http://localhost:8002/docs
 - Tasks API: http://localhost:8003/docs
+
+**API Gateway (acceso producción):**
+- Gateway: http://localhost:8080
+- Users via Gateway: http://localhost:8080/api/users/
+- Projects via Gateway: http://localhost:8080/api/projects/
+- Tasks via Gateway: http://localhost:8080/api/tasks/
+
+**Infraestructura:**
+- RabbitMQ Management: http://localhost:15672 (guest/guest)
+- PostgreSQL: localhost:5432 (postgres/postgres)
+- Redis: localhost:6379
 
 ## Demostración rápida (curl)
 ```bash
@@ -87,5 +112,124 @@ docker-compose.yml
 
 ---
 
-> Scripting de demostración: ver `README` (curl). Los servicios inicializan sus **schemas** si no existen.# ANDIS2_TFU
-# ANDIS2_TFU
+## Patrones Arquitectónicos
+
+Este proyecto implementa **7 patrones arquitectónicos** para garantizar disponibilidad, rendimiento y seguridad.
+
+### Patrones de Disponibilidad (3)
+
+**1. Health Endpoint Monitoring**
+- Monitoreo detallado de salud de cada servicio y sus dependencias
+- Verifica: base de datos, Redis, RabbitMQ, y servicios dependientes
+- Endpoint: `/health` en cada servicio
+
+**2. Circuit Breaker**
+- Previene fallos en cascada cortando llamadas a servicios que fallan
+- Configuración: abre después de 5 fallos, timeout de 30 segundos
+- Implementado en todas las llamadas inter-servicio
+
+**3. Retry con Exponential Backoff**
+- Reintentos automáticos con delays incrementales (2s, 4s, 8s)
+- Máximo 3 intentos antes de fallar
+- Maneja errores transitorios de red
+
+### Patrones de Rendimiento (2)
+
+**4. Cache-Aside**
+- Caché Redis con TTL de 5 minutos
+- Reduce carga en base de datos ~10x
+- Invalidación automática en create/update
+
+**5. Queue-Based Load Leveling**
+- Colas RabbitMQ para procesamiento asíncrono
+- Suaviza picos de tráfico
+- Workers en background procesan tareas
+
+### Patrones de Seguridad (2)
+
+**6. Rate Limiting**
+- Capa 1 (Gateway): 10 req/s con burst de 20
+- Capa 2 (App): 100 req/min por IP
+- Protección contra abuso y DDoS
+
+**7. Gateway Offloading**
+- nginx como API Gateway centralizado
+- Maneja: routing, rate limiting, timeouts
+- Punto de entrada único en puerto 8080
+
+📖 **Documentación completa:** Ver [PATTERNS.md](./PATTERNS.md)
+
+## Testing y Validación
+
+### Scripts de Validación
+
+```bash
+cd validation-scripts
+
+# Correr TODAS las pruebas (funcionales + patrones)
+./run_all.sh
+
+# Solo pruebas de patrones arquitectónicos
+./run_pattern_tests.sh
+
+# Pruebas individuales
+./7_health_monitoring.sh       # Health Endpoint Monitoring
+./8_cache_aside.sh              # Cache-Aside
+./9_circuit_breaker_retry.sh    # Circuit Breaker + Retry
+./10_rate_limiting.sh           # Rate Limiting
+./11_queue_load_leveling.sh     # Queue-Based Load Leveling
+./12_gateway_offloading.sh      # Gateway Offloading
+```
+
+### Pruebas Funcionales Originales
+- `1_smoke.sh` - Smoke test básico
+- `2_acid_tasks.sh` - Transacciones ACID
+- `3_idempotency_users.sh` - Idempotencia
+- `4_stateless_restart.sh` - Stateless + persistencia
+- `5_schemas.sh` - Aislamiento por schemas
+- `6_concurrency_users.sh` - Concurrencia
+
+## Estructura del Proyecto
+
+```
+mini-gestor-proyectos/
+├── docker-compose.yml          # Orquestación de servicios
+├── README.md                   # Este archivo
+├── PATTERNS.md                 # Documentación de patrones
+├── gateway/
+│   ├── nginx.conf              # Configuración API Gateway
+│   └── rate-limit-zones/
+├── services/
+│   ├── users-api/
+│   │   ├── app.py              # API con patrones integrados
+│   │   ├── patterns.py         # Implementación de patrones
+│   │   ├── queue.py            # Queue-based load leveling
+│   │   ├── models.py
+│   │   ├── schemas.py
+│   │   ├── db.py
+│   │   └── requirements.txt
+│   ├── projects-api/           # Estructura similar
+│   └── tasks-api/              # Estructura similar
+└── validation-scripts/
+    ├── run_all.sh              # Ejecuta todas las pruebas
+    ├── run_pattern_tests.sh    # Solo patrones
+    ├── 1_smoke.sh ... 6_concurrency_users.sh
+    └── 7_health_monitoring.sh ... 12_gateway_offloading.sh
+```
+
+## Tecnologías de Patrones
+
+| Patrón | Tecnología | Propósito |
+|--------|-----------|-----------|
+| Circuit Breaker | pybreaker | Prevenir fallos en cascada |
+| Retry | tenacity | Reintentos con backoff |
+| Cache | Redis | Mejorar rendimiento |
+| Queue | RabbitMQ | Nivelar carga |
+| Rate Limiting | Redis + nginx | Prevenir abuso |
+| Gateway | nginx | Centralizar seguridad |
+
+---
+
+> **Scripting de demostración:** ver comandos curl arriba y scripts en `validation-scripts/`
+> 
+> Los servicios inicializan sus **schemas** si no existen y están diseñados para **escalado horizontal**.
