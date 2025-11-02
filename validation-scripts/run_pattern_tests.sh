@@ -15,7 +15,7 @@ echo ""
 echo ""
 
 # Seguimiento de resultados
-TOTAL_TESTS=6
+TOTAL_TESTS=7
 PASSED_TESTS=0
 FAILED_TESTS=0
 
@@ -43,6 +43,7 @@ run_test "Patrones Circuit Breaker + Retry" "9_circuit_breaker_retry.sh"
 run_test "Patrón Rate Limiting" "10_rate_limiting.sh"
 run_test "Queue-Based Load Leveling" "11_queue_load_leveling.sh"
 run_test "Patrón Gateway Offloading" "12_gateway_offloading.sh"
+run_test "Patrón Gatekeeper" "13_gatekeeper.sh"
 
 # Resumen
 echo ""
@@ -60,10 +61,11 @@ if [ $FAILED_TESTS -eq 0 ]; then
     echo "  1. Health Endpoint Monitoring - Health checks detallados"
     echo "  2. Circuit Breaker - Previene fallos en cascada"
     echo "  3. Retry - Exponential backoff para fallos transitorios"
-    echo "  4. Cache-Aside - Cache Redis para rendimiento"
-    echo "  5. Queue-Based Load Leveling - Procesamiento async con RabbitMQ"
-    echo "  6. Rate Limiting - Throttling de requests multi-capa"
+    echo "  4. Rate Limiting - Throttling de requests multi-capa"
+    echo "  5. Cache-Aside - Cache Redis para rendimiento"
+    echo "  6. Queue-Based Load Leveling - Procesamiento async con RabbitMQ"
     echo "  7. Gateway Offloading - Concerns cross-cutting centralizados"
+    echo "  8. Gatekeeper - Autenticación/Autorización centralizada"
     echo ""
     exit 0
 else

@@ -1,16 +1,17 @@
 # Mini Gestor de Proyectos — UT3 TFU (FastAPI + Docker + ACID + UT4 Architectural Patterns)
 
-Este repo incluye 3 APIs (usuarios, proyectos y tareas) desplegadas con **Docker Compose**,
+Este repo incluye 4 APIs (autenticación, usuarios, proyectos y tareas) desplegadas con **Docker Compose**,
 todas utilizando **PostgreSQL** y transacciones **ACID** a nivel de servicio (los servicios son *stateless*).
 
-**Implementa 7 patrones arquitectónicos** de disponibilidad, rendimiento y seguridad:
+**Implementa 8 patrones arquitectónicos** de disponibilidad, rendimiento y seguridad:
 - Health Endpoint Monitoring
 - Circuit Breaker
 - Retry with Exponential Backoff
+- Rate Limiting (Multi-layer)
 - Cache-Aside (Redis)
 - Queue-Based Load Leveling (RabbitMQ)
-- Rate Limiting (Multi-layer)
 - Gateway Offloading (nginx)
+- Gatekeeper (JWT Auth)
 
 Alineado con la consigna (componentes, interfaces, contenedores, ACID, servicios sin estado) de la UT3 TFU. Ver documento de la cátedra.
 
@@ -31,6 +32,7 @@ docker compose up --build
 ### Servicios disponibles
 
 **APIs (acceso directo para desarrollo):**
+- Auth API (Gatekeeper): http://localhost:8004/docs
 - Users API: http://localhost:8001/docs
 - Projects API: http://localhost:8002/docs
 - Tasks API: http://localhost:8003/docs
@@ -114,9 +116,9 @@ docker-compose.yml
 
 ## Patrones Arquitectónicos
 
-Este proyecto implementa **7 patrones arquitectónicos** para garantizar disponibilidad, rendimiento y seguridad.
+Este proyecto implementa **8 patrones arquitectónicos** para garantizar disponibilidad, rendimiento y seguridad.
 
-### Patrones de Disponibilidad (3)
+### Patrones de Disponibilidad (4)
 
 **1. Health Endpoint Monitoring**
 - Monitoreo detallado de salud de cada servicio y sus dependencias
@@ -133,29 +135,34 @@ Este proyecto implementa **7 patrones arquitectónicos** para garantizar disponi
 - Máximo 3 intentos antes de fallar
 - Maneja errores transitorios de red
 
+**4. Rate Limiting**
+- Capa 1 (Gateway): 10 req/s con burst de 20
+- Capa 2 (App): 100 req/min por IP
+- Protección contra abuso y DDoS
+
 ### Patrones de Rendimiento (2)
 
-**4. Cache-Aside**
+**5. Cache-Aside**
 - Caché Redis con TTL de 5 minutos
 - Reduce carga en base de datos ~10x
 - Invalidación automática en create/update
 
-**5. Queue-Based Load Leveling**
+**6. Queue-Based Load Leveling**
 - Colas RabbitMQ para procesamiento asíncrono
 - Suaviza picos de tráfico
 - Workers en background procesan tareas
 
 ### Patrones de Seguridad (2)
 
-**6. Rate Limiting**
-- Capa 1 (Gateway): 10 req/s con burst de 20
-- Capa 2 (App): 100 req/min por IP
-- Protección contra abuso y DDoS
-
 **7. Gateway Offloading**
 - nginx como API Gateway centralizado
 - Maneja: routing, rate limiting, timeouts
 - Punto de entrada único en puerto 8080
+
+**8. Gatekeeper**
+- Servicio dedicado de autenticación/autorización
+- Emite y valida tokens JWT
+- Control de acceso centralizado basado en roles
 
 📖 **Documentación completa:** Ver [PATTERNS.md](./PATTERNS.md)
 
@@ -179,6 +186,7 @@ cd validation-scripts
 ./10_rate_limiting.sh           # Rate Limiting
 ./11_queue_load_leveling.sh     # Queue-Based Load Leveling
 ./12_gateway_offloading.sh      # Gateway Offloading
+./13_gatekeeper.sh              # Gatekeeper
 ```
 
 ### Pruebas Funcionales Originales
@@ -221,12 +229,14 @@ mini-gestor-proyectos/
 
 | Patrón | Tecnología | Propósito |
 |--------|-----------|-----------|
+| Health Monitoring | FastAPI | Monitoreo de salud |
 | Circuit Breaker | pybreaker | Prevenir fallos en cascada |
 | Retry | tenacity | Reintentos con backoff |
+| Rate Limiting | Redis + nginx | Prevenir abuso |
 | Cache | Redis | Mejorar rendimiento |
 | Queue | RabbitMQ | Nivelar carga |
-| Rate Limiting | Redis + nginx | Prevenir abuso |
 | Gateway | nginx | Centralizar seguridad |
+| Gatekeeper | JWT/FastAPI | Autenticación/Autorización |
 
 ---
 

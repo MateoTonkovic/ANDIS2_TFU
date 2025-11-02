@@ -41,6 +41,13 @@ services:
       timeout: 5s
       retries: 5
 
+  auth-api:
+    build: ./services/auth-api
+    environment:
+      JWT_SECRET_KEY: mi-clave-secreta-super-segura-cambiar-en-produccion
+    ports:
+      - "8004:8000"
+
   users-api:
     build: ./services/users-api
     environment:
@@ -100,6 +107,7 @@ services:
       - ./gateway/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./gateway/rate-limit-zones:/etc/nginx/rate-limit-zones
     depends_on:
+      - auth-api
       - users-api
       - projects-api
       - tasks-api

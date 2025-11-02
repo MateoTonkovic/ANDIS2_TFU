@@ -16,7 +16,7 @@ Prueban: **smoke/health**, **ACID intra-servicio**, **idempotencia**,
 6. `6_concurrency_users.sh` - Concurrencia
 
 ### Parte 2: Patrones Arquitectónicos
-Validan los **7 patrones** implementados (disponibilidad, rendimiento, seguridad):
+Validan los **8 patrones** implementados (disponibilidad, rendimiento, seguridad):
 
 7. `7_health_monitoring.sh` - **Health Endpoint Monitoring**
    - Verifica monitoreo detallado de dependencias
@@ -36,11 +36,14 @@ Validan los **7 patrones** implementados (disponibilidad, rendimiento, seguridad
     
 12. `12_gateway_offloading.sh` - **Gateway Offloading**
     - Prueba routing y offloading de concerns
+    
+13. `13_gatekeeper.sh` - **Gatekeeper**
+    - Valida autenticación/autorización con JWT
 
 ## Requisitos
 - Servicios levantados: `docker compose up -d`
 - macOS / Linux con `bash`, `curl`, `jq` y Docker
-- Puertos disponibles: 8001-8003, 8080, 5432, 6379, 5672, 15672
+- Puertos disponibles: 8001-8004, 8080, 5432, 6379, 5672, 15672
 
 ## Uso
 
@@ -75,15 +78,16 @@ Cada script:
 
 | Script | Patrón | Categoría | Tecnología |
 |--------|--------|-----------|------------|
-| 7 | Health Endpoint Monitoring | Availability | FastAPI |
-| 9 | Circuit Breaker | Availability | pybreaker |
-| 9 | Retry | Availability | tenacity |
-| 8 | Cache-Aside | Performance | Redis |
-| 11 | Queue-Based Load Leveling | Performance | RabbitMQ |
-| 10 | Rate Limiting | Security | Redis + nginx |
-| 12 | Gateway Offloading | Security | nginx |
+| 7 | Health Endpoint Monitoring | Disponibilidad | FastAPI |
+| 9 | Circuit Breaker | Disponibilidad | pybreaker |
+| 9 | Retry | Disponibilidad | tenacity |
+| 10 | Rate Limiting | Disponibilidad | Redis + nginx |
+| 8 | Cache-Aside | Rendimiento | Redis |
+| 11 | Queue-Based Load Leveling | Rendimiento | RabbitMQ |
+| 12 | Gateway Offloading | Seguridad | nginx |
+| 13 | Gatekeeper | Seguridad | JWT/FastAPI |
 
-**Total: 7 patrones** (3 disponibilidad + 2 rendimiento + 2 seguridad)
+**Total: 8 patrones** (4 disponibilidad + 2 rendimiento + 2 seguridad)
 
 ## Troubleshooting
 
